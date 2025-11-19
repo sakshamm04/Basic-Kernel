@@ -1,0 +1,32 @@
+# MAKE SURE TO EXECUTE IN THE EXACT SEQUENCE,
+ALSO I GAVE SPACES BETWEEN EACH COMMAND TO AVOID CONFUSION!
+
+# These are the dependencies you need to install :
+sudo apt install -y build-essential nasm binutils-i686-linux-gnu grub-pc-bin grub-common xorriso qemu-system-x86 file gcc-i686-linux-gnu
+
+nasm -f elf32 kernel.asm -o kernel_asm.o
+
+nasm -f elf32 port_io.asm -o port_io.o
+
+i686-linux-gnu-gcc -m32 -c kernel.c -o kernel_c.o -ffreestanding -O2 -Wall
+
+ld -m elf_i386 -T link.ld -o kernel.bin kernel_asm.o kernel_c.o port_io.o
+
+file kernel.bin
+
+rm -rf iso
+
+mkdir -p iso/boot/grub
+
+cp kernel.bin iso/boot/
+
+echo 'set timeout=0
+set default=0
+menuentry "My First OS" {
+    multiboot /boot/kernel.bin
+    boot
+}' > iso/boot/grub/grub.cfg
+
+grub-mkrescue -o myos.iso iso
+
+qemu-system-i386 -cdrom myos.iso
